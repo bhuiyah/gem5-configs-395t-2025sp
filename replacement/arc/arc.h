@@ -29,8 +29,8 @@ class arc : public champsim::modules::replacement {
 
  private:
   // Total ways and sets from the cache configuration.
-  long NUM_WAY;
   long NUM_SET;
+  long NUM_WAY;
 
   // Per-set ARC state structure.
   struct ARC_Set {
@@ -43,10 +43,6 @@ class arc : public champsim::modules::replacement {
 
   // A vector of ARC state objects, one for each cache set.
   std::vector<ARC_Set> arc_sets;
-
-  // Helper functions for list membership and removal.
-  bool in_list(const std::deque<uint64_t>& list, champsim::address addr);
-  void remove_from_list(std::deque<uint64_t>& list, champsim::address addr);
 };
 
 #endif
