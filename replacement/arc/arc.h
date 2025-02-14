@@ -43,6 +43,12 @@ class arc : public champsim::modules::replacement {
 
   // A vector of ARC state objects, one for each cache set.
   std::vector<ARC_Set> arc_sets;
+
+      // Helper function declarations.
+    // Returns true if 'tag' is found in the given deque.
+    bool in_list(const std::deque<uint64_t>& list, uint64_t tag);
+    // Removes the first occurrence of 'tag' from the deque.
+    void remove_from_list(std::deque<uint64_t>& list, uint64_t tag);
 };
 
 #endif
