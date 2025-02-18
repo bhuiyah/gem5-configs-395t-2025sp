@@ -29,8 +29,8 @@ class arc : public champsim::modules::replacement {
 
  private:
   // Total ways and sets from the cache configuration.
-  long NUM_SET;
-  long NUM_WAY;
+  size_t NUM_SET;
+  size_t NUM_WAY;
 
   // Per-set ARC state structure.
   struct ARC_Set {
@@ -38,13 +38,13 @@ class arc : public champsim::modules::replacement {
     std::deque<uint64_t> T2; // Resident list: blocks seen at least twice.
     std::deque<uint64_t> B1; // Ghost list for evicted T1 blocks.
     std::deque<uint64_t> B2; // Ghost list for evicted T2 blocks.
-    uint32_t p;            // Adaptation parameter that controls the target size for T1.
+    size_t p;            // Adaptation parameter that controls the target size for T1.
   };
 
   // A vector of ARC state objects, one for each cache set.
   std::vector<ARC_Set> arc_sets;
 
-      // Helper function declarations.
+    // Helper function declarations.
     // Returns true if 'tag' is found in the given deque.
     bool in_list(const std::deque<uint64_t>& list, uint64_t tag);
     // Removes the first occurrence of 'tag' from the deque.

@@ -1,5 +1,5 @@
 {
-    "executable_name": "champsim_skylake_lru4l2c",
+    "executable_name": "champsim_skylake_arc4l2c",
     "block_size": 64,
     "page_size": 4096,
     "heartbeat_frequency": 10000000,
@@ -85,7 +85,7 @@
         "virtual_prefetch": false,
         "prefetch_activate": "LOAD,PREFETCH",
         "prefetcher": "no",
-        "replacement": "lru"
+        "replacement": "arc"
     },
 
     "ITLB": {
