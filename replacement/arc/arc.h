@@ -14,10 +14,10 @@ private:
     
     // Track entries in each list per set
     struct ARC_State {
-        std::deque<long> T1;  // Cache ways in T1 (recency)
-        std::deque<long> T2;  // Cache ways in T2 (frequency)
-        std::deque<long> B1;  // Ghost list for T1 evictions
-        std::deque<long> B2;  // Ghost list for T2 evictions
+        std::deque<champsim::address> T1;  // Cache ways in T1 (recency)
+        std::deque<champsim::address> T2;  // Cache ways in T2 (frequency)
+        std::deque<champsim::address> B1;  // Ghost list for T1 evictions
+        std::deque<champsim::address> B2;  // Ghost list for T2 evictions
         
         // Target size for T1 (p)
         size_t p;

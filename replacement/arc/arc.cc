@@ -28,72 +28,81 @@ long arc::find_victim(uint32_t cpu, uint64_t instr_id, long set,
                      access_type type) {
     ARC_State &aset = arc_states[set];
 
+    champsim::address victim_addr;
+
     // Handle WRITE requests separately
     if (type == access_type::WRITE) {
         if (!aset.T1.empty()) {
             // Prefer evicting from T1 (recency list)
-            long victim_way = aset.T1.back();
+            victim_addr = aset.T1.back();
             aset.T1.pop_back();
-            aset.B1.push_front(victim_way);  // Move evicted block to B1 (ghost list)
+            aset.B1.push_front(victim_addr);  // Move evicted block to B1 (ghost list)
 
             // Ensure B1 does not grow beyond NUM_WAY
             if (aset.B1.size() > (size_t)NUM_WAY) {
                 aset.B1.pop_back();
             }
-            return victim_way;
         } 
         else if (!aset.T2.empty()) {
             // If T1 is too small, evict from T2 (frequency list)
-            long victim_way = aset.T2.back();
+            victim_addr = aset.T2.back();
             aset.T2.pop_back();
-            aset.B2.push_front(victim_way);  // Move evicted block to B2 (ghost list)
+            aset.B2.push_front(victim_addr);  // Move evicted block to B2 (ghost list)
 
             // Ensure B2 does not grow beyond NUM_WAY
             if (aset.B2.size() > (size_t)NUM_WAY) {
                 aset.B2.pop_back();
             }
-            return victim_way;
+        }
+        else {
+            // Fallback: Evict the first clean block encountered, else choose way 0
+            for (long way = 0; way < NUM_WAY; way++) {
+                if (!current_set[way].dirty) {
+                    return way;
+                }
+            }
         }
 
-        // Fallback: Evict the first clean block encountered, else choose way 0
+        // current_set[way].valid && 
         for (long way = 0; way < NUM_WAY; way++) {
-            if (!current_set[way].dirty) {
+            if (current_set[way].address == victim_addr) {
                 return way;
             }
         }
-        return 0;  // No clean block found, evict way 0
-    }
+    } else { // Handle READ requests
+        if (aset.T1.empty() && aset.T2.empty()) {
+            return NUM_WAY;  // Indicating no eviction possible, bypass
+        }                   
+        
+        if (!aset.T1.empty() && aset.T1.size() > aset.p) {
+            victim_addr = aset.T1.back();
+            aset.T1.pop_back();
+            aset.B1.push_front(victim_addr);  // Move evicted block to B1 (ghost list)
 
-    // Handle READ requests
-    if (aset.T1.empty() && aset.T2.empty()) {
-        return NUM_WAY;  // Indicating no eviction possible, bypass
-    }
+            // Ensure B1 does not grow beyond NUM_WAY
+            if (aset.B1.size() > (size_t)NUM_WAY) {
+                aset.B1.pop_back();
+            }
+        } else if (!aset.T2.empty()) {
+            victim_addr = aset.T2.back();
+            aset.T2.pop_back();
+            aset.B2.push_front(victim_addr);  // Move evicted block to B2 (ghost list)
 
-    long victim_way = 0;                    
-    
-    if (!aset.T1.empty() && aset.T1.size() > aset.p) {
-        victim_way = aset.T1.back();
-        aset.T1.pop_back();
-        aset.B1.push_front(victim_way);  // Move evicted block to B1 (ghost list)
-
-        // Ensure B1 does not grow beyond NUM_WAY
-        if (aset.B1.size() > (size_t)NUM_WAY) {
-            aset.B1.pop_back();
+            // Ensure B2 does not grow beyond NUM_WAY
+            if (aset.B2.size() > (size_t)NUM_WAY) {
+                aset.B2.pop_back();
+            }
+        } else {
+            return NUM_WAY;  // No valid eviction candidate
         }
-    } else if (!aset.T2.empty()) {
-        victim_way = aset.T2.back();
-        aset.T2.pop_back();
-        aset.B2.push_front(victim_way);  // Move evicted block to B2 (ghost list)
 
-        // Ensure B2 does not grow beyond NUM_WAY
-        if (aset.B2.size() > (size_t)NUM_WAY) {
-            aset.B2.pop_back();
+        for (long way = 0; way < NUM_WAY; way++) {
+            if (current_set[way].address == victim_addr) {
+                return way;
+            }
         }
-    } else {
-        return NUM_WAY;  // No valid eviction candidate
     }
-
-    return victim_way;
+    return 0;
 }
 
 void arc::update_replacement_state(uint32_t cpu, long set, long way,
@@ -107,62 +116,66 @@ void arc::update_replacement_state(uint32_t cpu, long set, long way,
         if (type == access_type::WRITE) { return; }
 
         // Check if the page is in T1 (seen once recently)
-        auto it_T1 = std::find(aset.T1.begin(), aset.T1.end(), way);
+        auto it_T1 = std::find(aset.T1.begin(), aset.T1.end(), addr);
         if (it_T1 != aset.T1.end()) {
             // Move from T1 to MRU position of T2 (upgrade to "seen multiple times")
             aset.T1.erase(it_T1);
-            aset.T2.push_front(way);
+            aset.T2.push_front(addr);
             return;
         } 
 
         // Check if the page is in T2 (seen multiple times)
-        auto it_T2 = std::find(aset.T2.begin(), aset.T2.end(), way);
+        auto it_T2 = std::find(aset.T2.begin(), aset.T2.end(), addr);
         if (it_T2 != aset.T2.end()) {
             // Move to MRU position of T2 (maintain frequency)
             aset.T2.erase(it_T2);
-            aset.T2.push_front(way);
+            aset.T2.push_front(addr);
             return;
         }
     }
 
     // Handle cache misses (fills)
-    auto it_B1 = std::find(aset.B1.begin(), aset.B1.end(), way);
-    auto it_B2 = std::find(aset.B2.begin(), aset.B2.end(), way);
+    auto it_B1 = std::find(aset.B1.begin(), aset.B1.end(), addr);
+    auto it_B2 = std::find(aset.B2.begin(), aset.B2.end(), addr);
+
+    size_t B1_size = std::max(1ul, aset.B1.size());
+    size_t B2_size = std::max(1ul, aset.B2.size());
 
     if (it_B1 != aset.B1.end()) {
-        // Address found in B1 (recently evicted from T1), increase p
-        aset.p = std::min(aset.p + std::max(1ul, aset.B2.size() / std::max(1ul, aset.B1.size())), (size_t)NUM_WAY);
+        aset.p = std::min(aset.p + std::max(1ul, B2_size / B1_size), (size_t)NUM_WAY);
         aset.B1.erase(it_B1);
-        aset.T2.push_front(way); // Move to T2
+        aset.T2.push_front(addr);
     } 
     else if (it_B2 != aset.B2.end()) {
-        // Address found in B2 (recently evicted from T2), decrease p
-        aset.p = std::max(aset.p - std::max(1ul, aset.B1.size() / std::max(1ul, aset.B2.size())), 0ul);
+        aset.p = std::max(aset.p - std::max(1ul, B1_size / B2_size), 0ul);
         aset.B2.erase(it_B2);
-        aset.T2.push_front(way); // Move to T2
-    } 
+        aset.T2.push_front(addr);
+    }
     else {
         // Neither B1 nor B2 contains the address, insert into T1
-        aset.T1.push_front(way);
+        aset.T1.push_front(addr);
     }
 
     // Handle cache replacement if necessary
     size_t cache_capacity = aset.T1.size() + aset.T2.size();
     if (cache_capacity >= static_cast<size_t>(NUM_WAY)) {
+        champsim::address evicted_addr;
         if (aset.T1.size() >= aset.p) {
             // Evict from T1 and move to B1
-            long evicted = aset.T1.back();
+            // long evicted = aset.T1.back();
+            evicted_addr = (victim_addr.to<uint64_t>() != 0) ? victim_addr : aset.T1.back();
             aset.T1.pop_back();
-            aset.B1.push_front(evicted);
+            aset.B1.push_front(evicted_addr);
             if (aset.B1.size() > static_cast<size_t>(NUM_WAY)) {
                 aset.B1.pop_back();
             }
         } 
         else {
             // Evict from T2 and move to B2
-            long evicted = aset.T2.back();
+            // long evicted = aset.T2.back();
+            evicted_addr = (victim_addr.to<uint64_t>() != 0) ? victim_addr : aset.T2.back();
             aset.T2.pop_back();
-            aset.B2.push_front(evicted);
+            aset.B2.push_front(evicted_addr);
             if (aset.B2.size() > static_cast<size_t>(NUM_WAY)) {
                 aset.B2.pop_back();
             }
