@@ -101,6 +101,7 @@ long arc::find_victim(uint32_t cpu, uint64_t instr_id, long set,
                 return way;
             }
         }
+        return 0;
     }
     return 0;
 }
@@ -110,6 +111,8 @@ void arc::update_replacement_state(uint32_t cpu, long set, long way,
                                  champsim::address victim_addr, access_type type,
                                  uint8_t hit) {
     ARC_State &aset = arc_states[set];
+
+    if (way >= NUM_WAY) return;
 
     if (hit) {
         // Only process actual hits (ignore misses and writebacks)
@@ -142,12 +145,14 @@ void arc::update_replacement_state(uint32_t cpu, long set, long way,
     size_t B2_size = std::max(1ul, aset.B2.size());
 
     if (it_B1 != aset.B1.end()) {
-        aset.p = std::min(aset.p + std::max(1ul, B2_size / B1_size), (size_t)NUM_WAY);
+        size_t increase = std::max(1ul, B2_size / B1_size);
+        aset.p = std::min(static_cast<size_t>(NUM_WAY), aset.p + increase);
         aset.B1.erase(it_B1);
         aset.T2.push_front(addr);
     } 
     else if (it_B2 != aset.B2.end()) {
-        aset.p = std::max(aset.p - std::max(1ul, B1_size / B2_size), 0ul);
+        size_t decrease = std::max(1ul, B1_size / B2_size);
+        aset.p = (aset.p >= decrease) ? (aset.p - decrease) : 0;
         aset.B2.erase(it_B2);
         aset.T2.push_front(addr);
     }
@@ -156,30 +161,31 @@ void arc::update_replacement_state(uint32_t cpu, long set, long way,
         aset.T1.push_front(addr);
     }
 
-    // Handle cache replacement if necessary
+    // **Handle Cache Replacement If Necessary**
     size_t cache_capacity = aset.T1.size() + aset.T2.size();
     if (cache_capacity >= static_cast<size_t>(NUM_WAY)) {
         champsim::address evicted_addr;
+
         if (aset.T1.size() >= aset.p) {
-            // Evict from T1 and move to B1
-            // long evicted = aset.T1.back();
-            evicted_addr = (victim_addr.to<uint64_t>() != 0) ? victim_addr : aset.T1.back();
+            // **Evict from T1 and move to B1**
+            evicted_addr = (!victim_addr.to<uint64_t>()) ? aset.T1.back() : victim_addr;
             aset.T1.pop_back();
             aset.B1.push_front(evicted_addr);
-            if (aset.B1.size() > static_cast<size_t>(NUM_WAY)) {
-                aset.B1.pop_back();
-            }
         } 
         else {
-            // Evict from T2 and move to B2
-            // long evicted = aset.T2.back();
-            evicted_addr = (victim_addr.to<uint64_t>() != 0) ? victim_addr : aset.T2.back();
+            // **Evict from T2 and move to B2**
+            evicted_addr = (!victim_addr.to<uint64_t>()) ? aset.T2.back() : victim_addr;
             aset.T2.pop_back();
             aset.B2.push_front(evicted_addr);
-            if (aset.B2.size() > static_cast<size_t>(NUM_WAY)) {
-                aset.B2.pop_back();
-            }
         }
+    }
+
+    // **Ensure `B1 + B2` does not grow indefinitely, remove LRU only when necessary**
+    if (aset.T1.size() + aset.B1.size() >= static_cast<size_t>(NUM_WAY)) {
+        aset.B1.pop_back(); // Evict LRU from B1 if `T1 + B1 == NUM_WAY`
+    } 
+    else if (aset.T1.size() + aset.T2.size() + aset.B1.size() + aset.B2.size() >= 2 * static_cast<size_t>(NUM_WAY)) {
+        aset.B2.pop_back(); // Evict LRU from B2 if `T1 + T2 + B1 + B2` exceeds cache size
     }
 }
 

@@ -2,48 +2,48 @@
     "name": "Simulation",
     "roi": {
         "DRAM": [{
-            "AVG DBUS CONGESTED CYCLE": 15.09195519834338,
-            "REFRESHES ISSUED": 26723,
-            "RQ ROW_BUFFER_HIT": 54263,
-            "RQ ROW_BUFFER_MISS": 1679919,
-            "WQ ROW_BUFFER_HIT": 109862,
-            "WQ ROW_BUFFER_MISS": 230376
+            "AVG DBUS CONGESTED CYCLE": 13.538170966912158,
+            "REFRESHES ISSUED": 28836,
+            "RQ ROW_BUFFER_HIT": 53495,
+            "RQ ROW_BUFFER_MISS": 1668953,
+            "WQ ROW_BUFFER_HIT": 103497,
+            "WQ ROW_BUFFER_MISS": 231582
         }],
         "LLC": {
             "LOAD": {
-                "hit": [46820],
-                "miss": [1036928],
+                "hit": [2132795],
+                "miss": [1031582],
                 "mshr_merge": [0]
             },
             "PREFETCH": {
-                "hit": [1231],
-                "miss": [482842],
+                "hit": [20694],
+                "miss": [476860],
                 "mshr_merge": [0]
             },
             "RFO": {
-                "hit": [112],
-                "miss": [203220],
+                "hit": [5965],
+                "miss": [202940],
                 "mshr_merge": [0]
             },
             "TRANSLATION": {
-                "hit": [1010],
-                "miss": [11217],
+                "hit": [35400],
+                "miss": [11117],
                 "mshr_merge": [0]
             },
             "WRITE": {
-                "hit": [342994],
-                "miss": [3000],
+                "hit": [345599],
+                "miss": [239],
                 "mshr_merge": [0]
             },
-            "miss latency": 206.30046118952617,
+            "miss latency": 204.6452373346347,
             "prefetch issued": 0,
             "prefetch requested": 0,
             "useful prefetch": 0,
             "useless prefetch": 0
         },
         "cores": [{
-            "Avg ROB occupancy at mispredict": 11.104399699690322,
-            "cycles": 320677770,
+            "Avg ROB occupancy at mispredict": 11.177198322501638,
+            "cycles": 346039511,
             "instructions": 102792572,
             "mispredict": {
                 "BRANCH_CONDITIONAL": 2943490,
@@ -56,9 +56,9 @@
         }],
         "cpu0_DTLB": {
             "LOAD": {
-                "hit": [23691748],
-                "miss": [180619],
-                "mshr_merge": [91678]
+                "hit": [23690641],
+                "miss": [181033],
+                "mshr_merge": [92094]
             },
             "PREFETCH": {
                 "hit": [0],
@@ -80,7 +80,7 @@
                 "miss": [0],
                 "mshr_merge": [0]
             },
-            "miss latency": 112.26800912964774,
+            "miss latency": 123.26202228493686,
             "prefetch issued": 0,
             "prefetch requested": 0,
             "useful prefetch": 0,
@@ -88,9 +88,9 @@
         },
         "cpu0_ITLB": {
             "LOAD": {
-                "hit": [3287980],
-                "miss": [689],
-                "mshr_merge": [295]
+                "hit": [3290500],
+                "miss": [685],
+                "mshr_merge": [291]
             },
             "PREFETCH": {
                 "hit": [0],
@@ -112,7 +112,7 @@
                 "miss": [0],
                 "mshr_merge": [0]
             },
-            "miss latency": 261.5279187817259,
+            "miss latency": 235.5279187817259,
             "prefetch issued": 0,
             "prefetch requested": 0,
             "useful prefetch": 0,
@@ -120,14 +120,14 @@
         },
         "cpu0_L1D": {
             "LOAD": {
-                "hit": [15962741],
-                "miss": [5000262],
-                "mshr_merge": [1819248]
+                "hit": [15969776],
+                "miss": [4993812],
+                "mshr_merge": [1812881]
             },
             "PREFETCH": {
-                "hit": [344965],
-                "miss": [675884],
-                "mshr_merge": [172150]
+                "hit": [349050],
+                "miss": [672312],
+                "mshr_merge": [168478]
             },
             "RFO": {
                 "hit": [0],
@@ -135,26 +135,26 @@
                 "mshr_merge": [0]
             },
             "TRANSLATION": {
-                "hit": [27264],
-                "miss": [46739],
-                "mshr_merge": [18]
+                "hit": [27276],
+                "miss": [46720],
+                "mshr_merge": [14]
             },
             "WRITE": {
-                "hit": [1748240],
-                "miss": [1350300],
-                "mshr_merge": [1140104]
+                "hit": [1747831],
+                "miss": [1350690],
+                "mshr_merge": [1140493]
             },
-            "miss latency": 96.38425640752294,
-            "prefetch issued": 1020849,
-            "prefetch requested": 1023447,
-            "useful prefetch": 427541,
-            "useless prefetch": 75945
+            "miss latency": 113.43185590929203,
+            "prefetch issued": 1021362,
+            "prefetch requested": 1023583,
+            "useful prefetch": 427586,
+            "useless prefetch": 75977
         },
         "cpu0_L1I": {
             "LOAD": {
-                "hit": [3292473],
-                "miss": [3393],
-                "mshr_merge": [589]
+                "hit": [3294925],
+                "miss": [3391],
+                "mshr_merge": [587]
             },
             "PREFETCH": {
                 "hit": [0],
@@ -176,7 +176,7 @@
                 "miss": [0],
                 "mshr_merge": [0]
             },
-            "miss latency": 224.06348074179743,
+            "miss latency": 207.4311697574893,
             "prefetch issued": 0,
             "prefetch requested": 0,
             "useful prefetch": 0,
@@ -184,31 +184,31 @@
         },
         "cpu0_L2C": {
             "LOAD": {
-                "hit": [2099990],
-                "miss": [1083828],
-                "mshr_merge": [80]
+                "hit": [19273],
+                "miss": [3164462],
+                "mshr_merge": [85]
             },
             "PREFETCH": {
-                "hit": [19524],
-                "miss": [484208],
-                "mshr_merge": [135]
+                "hit": [6135],
+                "miss": [497693],
+                "mshr_merge": [139]
             },
             "RFO": {
-                "hit": [6864],
-                "miss": [203332],
+                "hit": [1292],
+                "miss": [208905],
                 "mshr_merge": [0]
             },
             "TRANSLATION": {
-                "hit": [34494],
-                "miss": [12227],
+                "hit": [189],
+                "miss": [46517],
                 "mshr_merge": [0]
             },
             "WRITE": {
-                "hit": [352752],
-                "miss": [5],
+                "hit": [6728],
+                "miss": [346032],
                 "mshr_merge": [0]
             },
-            "miss latency": 229.07719379525193,
+            "miss latency": 94.92733188950577,
             "prefetch issued": 0,
             "prefetch requested": 0,
             "useful prefetch": 0,
@@ -217,7 +217,7 @@
         "cpu0_STLB": {
             "LOAD": {
                 "hit": [15712],
-                "miss": [73623],
+                "miss": [73621],
                 "mshr_merge": [0]
             },
             "PREFETCH": {
@@ -240,7 +240,7 @@
                 "miss": [0],
                 "mshr_merge": [0]
             },
-            "miss latency": 129.95899379270065,
+            "miss latency": 143.10198177150542,
             "prefetch issued": 0,
             "prefetch requested": 0,
             "useful prefetch": 0,
@@ -249,48 +249,48 @@
     },
     "sim": {
         "DRAM": [{
-            "AVG DBUS CONGESTED CYCLE": 15.09195519834338,
-            "REFRESHES ISSUED": 26723,
-            "RQ ROW_BUFFER_HIT": 54263,
-            "RQ ROW_BUFFER_MISS": 1679919,
-            "WQ ROW_BUFFER_HIT": 109862,
-            "WQ ROW_BUFFER_MISS": 230376
+            "AVG DBUS CONGESTED CYCLE": 13.538170966912158,
+            "REFRESHES ISSUED": 28836,
+            "RQ ROW_BUFFER_HIT": 53495,
+            "RQ ROW_BUFFER_MISS": 1668953,
+            "WQ ROW_BUFFER_HIT": 103497,
+            "WQ ROW_BUFFER_MISS": 231582
         }],
         "LLC": {
             "LOAD": {
-                "hit": [46820],
-                "miss": [1036928],
+                "hit": [2132795],
+                "miss": [1031582],
                 "mshr_merge": [0]
             },
             "PREFETCH": {
-                "hit": [1231],
-                "miss": [482842],
+                "hit": [20694],
+                "miss": [476860],
                 "mshr_merge": [0]
             },
             "RFO": {
-                "hit": [112],
-                "miss": [203220],
+                "hit": [5965],
+                "miss": [202940],
                 "mshr_merge": [0]
             },
             "TRANSLATION": {
-                "hit": [1010],
-                "miss": [11217],
+                "hit": [35400],
+                "miss": [11117],
                 "mshr_merge": [0]
             },
             "WRITE": {
-                "hit": [342994],
-                "miss": [3000],
+                "hit": [345599],
+                "miss": [239],
                 "mshr_merge": [0]
             },
-            "miss latency": 206.30046118952617,
+            "miss latency": 204.6452373346347,
             "prefetch issued": 0,
             "prefetch requested": 0,
             "useful prefetch": 0,
             "useless prefetch": 0
         },
         "cores": [{
-            "Avg ROB occupancy at mispredict": 11.104399699690322,
-            "cycles": 320677770,
+            "Avg ROB occupancy at mispredict": 11.177198322501638,
+            "cycles": 346039511,
             "instructions": 102792572,
             "mispredict": {
                 "BRANCH_CONDITIONAL": 2943490,
@@ -303,9 +303,9 @@
         }],
         "cpu0_DTLB": {
             "LOAD": {
-                "hit": [23691748],
-                "miss": [180619],
-                "mshr_merge": [91678]
+                "hit": [23690641],
+                "miss": [181033],
+                "mshr_merge": [92094]
             },
             "PREFETCH": {
                 "hit": [0],
@@ -327,7 +327,7 @@
                 "miss": [0],
                 "mshr_merge": [0]
             },
-            "miss latency": 112.26800912964774,
+            "miss latency": 123.26202228493686,
             "prefetch issued": 0,
             "prefetch requested": 0,
             "useful prefetch": 0,
@@ -335,9 +335,9 @@
         },
         "cpu0_ITLB": {
             "LOAD": {
-                "hit": [3287980],
-                "miss": [689],
-                "mshr_merge": [295]
+                "hit": [3290500],
+                "miss": [685],
+                "mshr_merge": [291]
             },
             "PREFETCH": {
                 "hit": [0],
@@ -359,7 +359,7 @@
                 "miss": [0],
                 "mshr_merge": [0]
             },
-            "miss latency": 261.5279187817259,
+            "miss latency": 235.5279187817259,
             "prefetch issued": 0,
             "prefetch requested": 0,
             "useful prefetch": 0,
@@ -367,14 +367,14 @@
         },
         "cpu0_L1D": {
             "LOAD": {
-                "hit": [15962741],
-                "miss": [5000262],
-                "mshr_merge": [1819248]
+                "hit": [15969776],
+                "miss": [4993812],
+                "mshr_merge": [1812881]
             },
             "PREFETCH": {
-                "hit": [344965],
-                "miss": [675884],
-                "mshr_merge": [172150]
+                "hit": [349050],
+                "miss": [672312],
+                "mshr_merge": [168478]
             },
             "RFO": {
                 "hit": [0],
@@ -382,26 +382,26 @@
                 "mshr_merge": [0]
             },
             "TRANSLATION": {
-                "hit": [27264],
-                "miss": [46739],
-                "mshr_merge": [18]
+                "hit": [27276],
+                "miss": [46720],
+                "mshr_merge": [14]
             },
             "WRITE": {
-                "hit": [1748240],
-                "miss": [1350300],
-                "mshr_merge": [1140104]
+                "hit": [1747831],
+                "miss": [1350690],
+                "mshr_merge": [1140493]
             },
-            "miss latency": 96.38425640752294,
-            "prefetch issued": 1020849,
-            "prefetch requested": 1023447,
-            "useful prefetch": 427541,
-            "useless prefetch": 75945
+            "miss latency": 113.43185590929203,
+            "prefetch issued": 1021362,
+            "prefetch requested": 1023583,
+            "useful prefetch": 427586,
+            "useless prefetch": 75977
         },
         "cpu0_L1I": {
             "LOAD": {
-                "hit": [3292473],
-                "miss": [3393],
-                "mshr_merge": [589]
+                "hit": [3294925],
+                "miss": [3391],
+                "mshr_merge": [587]
             },
             "PREFETCH": {
                 "hit": [0],
@@ -423,7 +423,7 @@
                 "miss": [0],
                 "mshr_merge": [0]
             },
-            "miss latency": 224.06348074179743,
+            "miss latency": 207.4311697574893,
             "prefetch issued": 0,
             "prefetch requested": 0,
             "useful prefetch": 0,
@@ -431,31 +431,31 @@
         },
         "cpu0_L2C": {
             "LOAD": {
-                "hit": [2099990],
-                "miss": [1083828],
-                "mshr_merge": [80]
+                "hit": [19273],
+                "miss": [3164462],
+                "mshr_merge": [85]
             },
             "PREFETCH": {
-                "hit": [19524],
-                "miss": [484208],
-                "mshr_merge": [135]
+                "hit": [6135],
+                "miss": [497693],
+                "mshr_merge": [139]
             },
             "RFO": {
-                "hit": [6864],
-                "miss": [203332],
+                "hit": [1292],
+                "miss": [208905],
                 "mshr_merge": [0]
             },
             "TRANSLATION": {
-                "hit": [34494],
-                "miss": [12227],
+                "hit": [189],
+                "miss": [46517],
                 "mshr_merge": [0]
             },
             "WRITE": {
-                "hit": [352752],
-                "miss": [5],
+                "hit": [6728],
+                "miss": [346032],
                 "mshr_merge": [0]
             },
-            "miss latency": 229.07719379525193,
+            "miss latency": 94.92733188950577,
             "prefetch issued": 0,
             "prefetch requested": 0,
             "useful prefetch": 0,
@@ -464,7 +464,7 @@
         "cpu0_STLB": {
             "LOAD": {
                 "hit": [15712],
-                "miss": [73623],
+                "miss": [73621],
                 "mshr_merge": [0]
             },
             "PREFETCH": {
@@ -487,7 +487,7 @@
                 "miss": [0],
                 "mshr_merge": [0]
             },
-            "miss latency": 129.95899379270065,
+            "miss latency": 143.10198177150542,
             "prefetch issued": 0,
             "prefetch requested": 0,
             "useful prefetch": 0,
