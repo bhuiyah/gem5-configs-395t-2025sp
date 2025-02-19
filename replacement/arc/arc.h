@@ -1,54 +1,51 @@
 #ifndef REPLACEMENT_ARC_H
 #define REPLACEMENT_ARC_H
 
-#include <deque>
 #include <vector>
-#include <algorithm>
+#include <deque>
 #include "cache.h"
 #include "modules.h"
 
-// Example ARC replacement module that inherits from the ChampSim replacement base class.
+// Adaptive Replacement Cache (ARC) implementation
 class arc : public champsim::modules::replacement {
- public:
-  // Constructor: note that we inherit from the base class constructor by passing a CACHE* pointer.
-  explicit arc(CACHE* cache);
-  arc(CACHE* cache, long sets, long ways);
+private:
+    const long NUM_SET;
+    const long NUM_WAY; 
+    
+    // Track entries in each list per set
+    struct ARC_State {
+        std::deque<long> T1;  // Cache ways in T1 (recency)
+        std::deque<long> T2;  // Cache ways in T2 (frequency)
+        std::deque<long> B1;  // Ghost list for T1 evictions
+        std::deque<long> B2;  // Ghost list for T2 evictions
+        
+        // Target size for T1 (p)
+        size_t p;
+    };
 
-  // Replacement policy functions required by ChampSim:
-  void initialize_replacement();
-  long find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set,
-                           const champsim::cache_block* current_set, champsim::address ip,
-                           champsim::address full_addr, access_type type);
-  void replacement_cache_fill(uint32_t triggering_cpu, long set, long way,
-                                      champsim::address full_addr, champsim::address ip,
-                                      champsim::address victim_addr, access_type type);
-  void update_replacement_state(uint32_t triggering_cpu, long set, long way,
-                                        champsim::address full_addr, champsim::address ip,
-                                        champsim::address victim_addr, access_type type, uint8_t hit);
-  void replacement_final_stats();
+    // State for each set
+    std::vector<ARC_State> arc_states;
 
- private:
-  // Total ways and sets from the cache configuration.
-  size_t NUM_SET;
-  size_t NUM_WAY;
+public:
+    explicit arc(CACHE* cache);
+    arc(CACHE* cache, long sets, long ways);
 
-  // Per-set ARC state structure.
-  struct ARC_Set {
-    std::deque<uint64_t> T1; // Resident list: blocks seen once.
-    std::deque<uint64_t> T2; // Resident list: blocks seen at least twice.
-    std::deque<uint64_t> B1; // Ghost list for evicted T1 blocks.
-    std::deque<uint64_t> B2; // Ghost list for evicted T2 blocks.
-    size_t p;            // Adaptation parameter that controls the target size for T1.
-  };
+    // Replacement policy functions required by ChampSim:
+    void initialize_replacement();
 
-  // A vector of ARC state objects, one for each cache set.
-  std::vector<ARC_Set> arc_sets;
+    long find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set,
+                    const champsim::cache_block* current_set, champsim::address ip,
+                    champsim::address full_addr, access_type type);
 
-    // Helper function declarations.
-    // Returns true if 'tag' is found in the given deque.
-    bool in_list(const std::deque<uint64_t>& list, uint64_t tag);
-    // Removes the first occurrence of 'tag' from the deque.
-    void remove_from_list(std::deque<uint64_t>& list, uint64_t tag);
+    void replacement_cache_fill(uint32_t triggering_cpu, long set, long way,
+                                champsim::address full_addr, champsim::address ip,
+                                champsim::address victim_addr, access_type type);
+
+    void update_replacement_state(uint32_t triggering_cpu, long set, long way,
+                                champsim::address full_addr, champsim::address ip,
+                                champsim::address victim_addr, access_type type, uint8_t hit);
+
+    void replacement_final_stats();
 };
 
 #endif
