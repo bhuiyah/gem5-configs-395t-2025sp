@@ -30,6 +30,10 @@ private:
         return addr.to<uint64_t>() >> LOG2_BLOCK_SIZE;
     }
 
+    std::vector<double> p_history;
+    std::vector<double> b1_history;
+    std::vector<double> b2_history;
+
 public:
     explicit arc(CACHE* cache);
     arc(CACHE* cache, long sets, long ways);
@@ -50,6 +54,8 @@ public:
                                 champsim::address victim_addr, access_type type, uint8_t hit);
 
     void replacement_final_stats();
+
+    void update_history();
 };
 
 #endif

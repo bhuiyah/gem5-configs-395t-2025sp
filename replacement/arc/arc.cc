@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iostream>
 #include <cstdint>
+#include <fstream>  // for file output
 
 // Constructor that uses the cache object to determine the number of sets and ways.
 arc::arc(CACHE* cache) : arc(cache, cache->NUM_SET, cache->NUM_WAY) {}
@@ -47,11 +48,11 @@ void arc::replacement_cache_fill(uint32_t cpu, long set, long way,
             std::cout << "[ARC Fill] Evicted " << tag << " from T2 to B2\n";
         }
     }
+    auto tag = get_block_tag(addr);
 
     size_t B1_sz = std::max(1ul, aset.B1.size());
     size_t B2_sz = std::max(1ul, aset.B2.size());
 
-    uint64_t tag = get_block_tag(addr);
     auto it_B1 = std::find(aset.B1.begin(), aset.B1.end(), tag);
     auto it_B2 = std::find(aset.B2.begin(), aset.B2.end(), tag);
     
@@ -108,9 +109,10 @@ void arc::replacement_cache_fill(uint32_t cpu, long set, long way,
             }
         }
         // Insert brand-new line in T1
-        aset.T1.push_front(get_block_tag(addr));
-        std::cout << "[ARC Fill] New block => Insert " << addr << " into T1\n";
+        aset.T1.push_front(tag);
+        std::cout << "[ARC Fill] New block => Insert " << tag << " into T1\n";
     }
+    update_history();
 }
 
 long arc::find_victim(uint32_t cpu, uint64_t instr_id, long set,
@@ -215,7 +217,7 @@ void arc::update_replacement_state(uint32_t cpu, long set, long way,
 
     if (hit) {
         // print out the address that hit
-        std::cout << "Hit: " << addr << std::endl;
+        std::cout << "Hit: " << get_block_tag(addr) << std::endl;
         // Case 1: Address is in T1 or T2, HIT
         // Check if the page is in T1 (seen once recently)
         //print all of the addresses in T1
@@ -262,20 +264,67 @@ void arc::update_replacement_state(uint32_t cpu, long set, long way,
 }
 
 void arc::replacement_final_stats() {
-    std::cout << "ARC Replacement Final Stats:\n";
-    for (long set = 0; set < NUM_SET; set++) {
-        ARC_State &aset = arc_states[set];
-        std::cout << "Set " << set 
-                  << " | p = " << aset.p 
-                  << " | T1 size = " << aset.T1.size() 
-                  << " | T2 size = " << aset.T2.size() 
-                  << " | B1 size = " << aset.B1.size() 
-                  << " | B2 size = " << aset.B2.size() 
-                  << "\n";
+    // std::cout << "ARC Replacement Final Stats:\n";
+    // for (long set = 0; set < NUM_SET; set++) {
+    //     ARC_State &aset = arc_states[set];
+    //     std::cout << "Set " << set 
+    //               << " | p = " << aset.p 
+    //               << " | T1 size = " << aset.T1.size() 
+    //               << " | T2 size = " << aset.T2.size() 
+    //               << " | B1 size = " << aset.B1.size() 
+    //               << " | B2 size = " << aset.B2.size() 
+    //               << "\n";
+    // }
+
+    // Export p_history to a file.
+    std::ofstream out("p_history.txt");
+    if (!out) {
+        std::cerr << "Failed to open p_history.txt for writing.\n";
+    } else {
+        for (double avg : p_history) {
+            out << avg << "\n";
+        }
+        out.close();
+    }
+    // Export B1 history
+    std::ofstream b1_out("b1_history.txt");
+    if (b1_out) {
+        for (double avg : b1_history) {
+            b1_out << avg << "\n";
+        }
+        b1_out.close();
+    } else {
+        std::cerr << "Error opening b1_history.txt for writing.\n";
+    }
+
+    // Export B2 history
+    std::ofstream b2_out("b2_history.txt");
+    if (b2_out) {
+        for (double avg : b2_history) {
+            b2_out << avg << "\n";
+        }
+        b2_out.close();
+    } else {
+        std::cerr << "Error opening b2_history.txt for writing.\n";
     }
 }
 
 extern const unsigned LOG2_BLOCK_SIZE;
 inline uint64_t get_block_tag(champsim::address addr) {
     return addr.to<uint64_t>() >> LOG2_BLOCK_SIZE;
+}
+
+void arc::update_history() {
+    double sum_p  = 0.0, sum_b1 = 0.0, sum_b2 = 0.0;
+    for (long set = 0; set < NUM_SET; set++) {
+        sum_p  += static_cast<double>(arc_states[set].p);
+        sum_b1 += static_cast<double>(arc_states[set].B1.size());
+        sum_b2 += static_cast<double>(arc_states[set].B2.size());
+    }
+    double avg_p  = sum_p  / static_cast<double>(NUM_SET);
+    double avg_b1 = sum_b1 / static_cast<double>(NUM_SET);
+    double avg_b2 = sum_b2 / static_cast<double>(NUM_SET);
+    p_history.push_back(avg_p);
+    b1_history.push_back(avg_b1);
+    b2_history.push_back(avg_b2);
 }
