@@ -32,26 +32,28 @@ void arc::replacement_cache_fill(uint32_t cpu, long set, long way,
     // FIRST: Handle the victim (evicted) block if there was one
     if (victim_addr.to<uint64_t>() != 0) {
         // Check if it was in T1
-        auto it_T1 = std::find(aset.T1.begin(), aset.T1.end(), victim_addr);
+        uint64_t tag = get_block_tag(victim_addr);
+        auto it_T1 = std::find(aset.T1.begin(), aset.T1.end(), tag);
         if (it_T1 != aset.T1.end()) {
             aset.T1.erase(it_T1);
-            aset.B1.push_front(victim_addr);
-            std::cout << "[ARC Fill] Evicted " << victim_addr << " from T1 to B1\n";
+            aset.B1.push_front(tag);
+            std::cout << "[ARC Fill] Evicted " << tag << " from T1 to B1\n";
         }
         // Check if it was in T2
-        auto it_T2 = std::find(aset.T2.begin(), aset.T2.end(), victim_addr);
+        auto it_T2 = std::find(aset.T2.begin(), aset.T2.end(), tag);
         if (it_T2 != aset.T2.end()) {
             aset.T2.erase(it_T2);
-            aset.B2.push_front(victim_addr);
-            std::cout << "[ARC Fill] Evicted " << victim_addr << " from T2 to B2\n";
+            aset.B2.push_front(tag);
+            std::cout << "[ARC Fill] Evicted " << tag << " from T2 to B2\n";
         }
     }
 
     size_t B1_sz = std::max(1ul, aset.B1.size());
     size_t B2_sz = std::max(1ul, aset.B2.size());
 
-    auto it_B1 = std::find(aset.B1.begin(), aset.B1.end(), addr);
-    auto it_B2 = std::find(aset.B2.begin(), aset.B2.end(), addr);
+    uint64_t tag = get_block_tag(addr);
+    auto it_B1 = std::find(aset.B1.begin(), aset.B1.end(), tag);
+    auto it_B2 = std::find(aset.B2.begin(), aset.B2.end(), tag);
     
     // Check if `addr` is in B1 => "ghost hit" => Case II
     if (it_B1 != aset.B1.end()) {
@@ -62,8 +64,8 @@ void arc::replacement_cache_fill(uint32_t cpu, long set, long way,
         aset.B1.erase(it_B1);
 
         // Insert xᵗ in T2 (MRU)
-        aset.T2.push_front(addr);
-        std::cout << "[ARC Fill] Ghost hit in B1 => move " << addr << " to T2\n";
+        aset.T2.push_front(tag);
+        std::cout << "[ARC Fill] Ghost hit in B1 => move " << tag << " to T2\n";
     } 
     // Check if `addr` is in B2 => "ghost hit" => Case III
     else if (it_B2 != aset.B2.end()) {
@@ -74,8 +76,8 @@ void arc::replacement_cache_fill(uint32_t cpu, long set, long way,
         aset.B2.erase(it_B2);
     
         // Insert xᵗ in T2 (MRU)
-        aset.T2.push_front(addr);
-        std::cout << "[ARC Fill] Ghost hit in B2 => move " << addr << " to T2\n";
+        aset.T2.push_front(tag);
+        std::cout << "[ARC Fill] Ghost hit in B2 => move " << tag << " to T2\n";
     } 
     // Otherwise, brand‐new block => "Case IV"
     else{
@@ -84,12 +86,14 @@ void arc::replacement_cache_fill(uint32_t cpu, long set, long way,
         size_t l2_size = aset.T2.size() + aset.B2.size(); // L2 = T2 ∪ B2
 
         if (l1_size >= c) {
+            
             if (aset.T1.size() < c) {
                 if (!aset.B1.empty()) { // Evict LRU from B1
                     aset.B1.pop_back();
                 }
             } else {
                 if (!aset.T1.empty()) { // B1 empty => Evict LRU from T1
+                    std::cout << "case 4, T1 is not empty " << "\n";
                     aset.T1.pop_back();
                 }
             }
@@ -104,7 +108,7 @@ void arc::replacement_cache_fill(uint32_t cpu, long set, long way,
             }
         }
         // Insert brand-new line in T1
-        aset.T1.push_front(addr);
+        aset.T1.push_front(get_block_tag(addr));
         std::cout << "[ARC Fill] New block => Insert " << addr << " into T1\n";
     }
 }
@@ -115,11 +119,16 @@ long arc::find_victim(uint32_t cpu, uint64_t instr_id, long set,
                       access_type type)
 {
     ARC_State &aset = arc_states[set];
-    champsim::address evicted_addr;
+
+    // Proactive cleanup: remove entries in T1 and T2 that are not in the current cache set.
+    // cleanup_state(set, current_set);
+
+    uint64_t evicted_addr;
 
     // *********** CASE A: WRITE REQUESTS ***********
     if (type == access_type::WRITE) {
-        auto in_B2 = std::find(aset.B2.begin(), aset.B2.end(), addr) != aset.B2.end();
+        auto tag = get_block_tag(addr);
+        auto in_B2 = std::find(aset.B2.begin(), aset.B2.end(), tag) != aset.B2.end();
 
         // We must never return NUM_WAY for a write fill in a write-allocate cache.
         if (!aset.T1.empty() && (aset.T1.size() > aset.p || (in_B2 && aset.T1.size() == aset.p))) {
@@ -146,7 +155,8 @@ long arc::find_victim(uint32_t cpu, uint64_t instr_id, long set,
         if (aset.T1.empty() && aset.T2.empty()) {
             return NUM_WAY;
         }
-        auto in_B2 = std::find(aset.B2.begin(), aset.B2.end(), addr) != aset.B2.end();
+        auto tag = get_block_tag(addr);
+        auto in_B2 = std::find(aset.B2.begin(), aset.B2.end(), tag) != aset.B2.end();
 
         // Use p-based logic to choose from T1 or T2
         if (!aset.T1.empty() && (aset.T1.size() > aset.p || (in_B2 && aset.T1.size() == aset.p))) {
@@ -167,7 +177,7 @@ long arc::find_victim(uint32_t cpu, uint64_t instr_id, long set,
     //print out the address that is being evicted
     // std::cout << "Evicted address: " << evicted_addr << std::endl;
     for (long w = 0; w < NUM_WAY; w++) {
-        if (current_set[w].address == evicted_addr) {
+        if (get_block_tag(current_set[w].address) == evicted_addr) {
             std::cout << "Successful Eviction from Cache: " << evicted_addr << std::endl;
             return w;
         }
@@ -175,25 +185,21 @@ long arc::find_victim(uint32_t cpu, uint64_t instr_id, long set,
     // we get here => mismatch
     //print out that we have a mismatch
     std::cout << "Eviction Mismatch:" << evicted_addr << std::endl;
-    auto it_T1 = std::find(aset.T1.begin(), aset.T1.end(), evicted_addr);
-    if (it_T1 != aset.T1.end()) {
-        aset.T1.erase(it_T1);
-    } else {
-        auto it_T2 = std::find(aset.T2.begin(), aset.T2.end(), evicted_addr);
-        if (it_T2 != aset.T2.end()) {
-            aset.T2.erase(it_T2);
-        }
+    // print out the addresses in the current set
+    for (long w = 0; w < NUM_WAY; w++) {
+        std::cout << current_set[w].address << " ";
     }
-    // if (type == access_type::WRITE) {
-    //     // can't bypass => pick something forcibly
-    //     // e.g., evict the first valid or the first block in T1 or T2
-    //     // or just fallback to way0
-    //     return 0;
-    // } else {
-    //     // read => can bypass
-    //     return NUM_WAY;
-    // }
-    return 0;
+    std::cout << std::endl;
+
+    if (type == access_type::WRITE) {
+        // can't bypass => pick something forcibly
+        // e.g., evict the first valid or the first block in T1 or T2
+        // or just fallback to way0
+        return 0;
+    } else {
+        // read => can bypass
+        return NUM_WAY;
+    }
 }
 
 void arc::update_replacement_state(uint32_t cpu, long set, long way,
@@ -223,11 +229,12 @@ void arc::update_replacement_state(uint32_t cpu, long set, long way,
             }
             std::cout << std::endl;
         }
-        auto it_T1 = std::find(aset.T1.begin(), aset.T1.end(), addr);
+        auto tag = get_block_tag(addr);
+        auto it_T1 = std::find(aset.T1.begin(), aset.T1.end(), tag);
         if (it_T1 != aset.T1.end()) {
             // Move from T1 to MRU position of T2 (upgrade to "seen multiple times")
             aset.T1.erase(it_T1);
-            aset.T2.push_front(addr);
+            aset.T2.push_front(tag);
             return;
         } 
 
@@ -242,11 +249,11 @@ void arc::update_replacement_state(uint32_t cpu, long set, long way,
             }
             std::cout << std::endl;
         }
-        auto it_T2 = std::find(aset.T2.begin(), aset.T2.end(), addr);
+        auto it_T2 = std::find(aset.T2.begin(), aset.T2.end(), tag);
         if (it_T2 != aset.T2.end()) {
             // Move to MRU position of T2 (maintain frequency)
             aset.T2.erase(it_T2);
-            aset.T2.push_front(addr);
+            aset.T2.push_front(tag);
             return;
         }
     }
@@ -266,4 +273,9 @@ void arc::replacement_final_stats() {
                   << " | B2 size = " << aset.B2.size() 
                   << "\n";
     }
+}
+
+extern const unsigned LOG2_BLOCK_SIZE;
+inline uint64_t get_block_tag(champsim::address addr) {
+    return addr.to<uint64_t>() >> LOG2_BLOCK_SIZE;
 }

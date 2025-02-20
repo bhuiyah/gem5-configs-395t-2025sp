@@ -14,10 +14,10 @@ private:
     
     // Track entries in each list per set
     struct ARC_State {
-        std::deque<champsim::address> T1;  // Cache ways in T1 (recency)
-        std::deque<champsim::address> T2;  // Cache ways in T2 (frequency)
-        std::deque<champsim::address> B1;  // Ghost list for T1 evictions
-        std::deque<champsim::address> B2;  // Ghost list for T2 evictions
+        std::deque<uint64_t> T1;  // Cache ways in T1 (recency)
+        std::deque<uint64_t> T2;  // Cache ways in T2 (frequency)
+        std::deque<uint64_t> B1;  // Ghost list for T1 evictions
+        std::deque<uint64_t> B2;  // Ghost list for T2 evictions
         
         // Target size for T1 (p)
         size_t p;
@@ -25,6 +25,10 @@ private:
 
     // State for each set
     std::vector<ARC_State> arc_states;
+
+    inline uint64_t get_block_tag(champsim::address addr) {
+        return addr.to<uint64_t>() >> LOG2_BLOCK_SIZE;
+    }
 
 public:
     explicit arc(CACHE* cache);
