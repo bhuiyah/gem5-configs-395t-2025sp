@@ -28,9 +28,9 @@ fi
 CHAMPSIM_BINARY_NAME=$1
 
 # Simulation parameters
-TRACE="/scratch/cluster/speedway/cs395t/hw1/part1/traces/matmul_small.xz"
+TRACE="/projects/coursework/2025-spring/cs395t-lin/bhuiyah/predmech/part2/traces/bfs.trace.gz"
 WARM_INS=0
-SIM_INS=10000000
+SIM_INS=125000000
 
 # Inferred parameters
 CHAMPSIM_BINARY=./bin/${CHAMPSIM_BINARY_NAME}

@@ -1,0 +1,13 @@
+[VMEM] WARNING: physical memory size is smaller than virtual memory size.
+
+*** ChampSim Multicore Out-of-Order Simulator ***
+Warmup Instructions: 0
+Simulation Instructions: 100000000
+Number of CPUs: 1
+Page size: 4096
+
+Off-chip DRAM Size: 16 GiB Channels: 1 Width: 64-bit Data Rate: 3205 MT/s
+Warmup finished CPU 0 instructions: 0 cycles: 1 cumulative IPC: 0 (Simulation time: 00 hr 00 min 00 sec)
+Warmup complete CPU 0 instructions: 0 cycles: 1 cumulative IPC: 0 (Simulation time: 00 hr 00 min 00 sec)
+Heartbeat CPU 0 instructions: 10000000 cycles: 22172387 heartbeat IPC: 0.451 cumulative IPC: 0.451 (Simulation time: 00 hr 01 min 54 sec)
+champsim_skylake_arc4l2c: replacement/arc/arc.cc:261: void arc::update_replacement_state(uint32_t, long int, long int, champsim::address, champsim::address, champsim::address, access_type, uint8_t): Assertion `hit == 0' failed.

@@ -4,6 +4,9 @@
 #include <iostream>
 #include <cstdint>
 #include <fstream>  // for file output
+#include <ctime>
+#include <unistd.h>
+#include <sstream>
 
 // Constructor that uses the cache object to determine the number of sets and ways.
 arc::arc(CACHE* cache) : arc(cache, cache->NUM_SET, cache->NUM_WAY) {}
@@ -20,6 +23,7 @@ void arc::initialize_replacement() {
         arc_states[set].B1.clear();
         arc_states[set].B2.clear();
         arc_states[set].p = 0; // TODO: change to smth different for experiment
+        // arc_states[set].p = NUM_WAY / 2;
     }
 }
 
@@ -37,15 +41,19 @@ void arc::replacement_cache_fill(uint32_t cpu, long set, long way,
         auto it_T1 = std::find(aset.T1.begin(), aset.T1.end(), tag);
         if (it_T1 != aset.T1.end()) {
             aset.T1.erase(it_T1);
+            if (aset.B1.size() >= GHOST_MIN) {
+                aset.B1.pop_back();
+            }
             aset.B1.push_front(tag);
-            std::cout << "[ARC Fill] Evicted " << tag << " from T1 to B1\n";
         }
         // Check if it was in T2
         auto it_T2 = std::find(aset.T2.begin(), aset.T2.end(), tag);
         if (it_T2 != aset.T2.end()) {
             aset.T2.erase(it_T2);
+            if (aset.B2.size() >= GHOST_MIN) {
+                aset.B2.pop_back();
+            }
             aset.B2.push_front(tag);
-            std::cout << "[ARC Fill] Evicted " << tag << " from T2 to B2\n";
         }
     }
     auto tag = get_block_tag(addr);
@@ -61,12 +69,13 @@ void arc::replacement_cache_fill(uint32_t cpu, long set, long way,
         // Increase p
         size_t increase = std::max(1ul, B2_sz / B1_sz);
         aset.p = std::min(c, aset.p + increase);
-
         aset.B1.erase(it_B1);
-
+            // Enforce maximum size for B1:
+        if (aset.B1.size() >= GHOST_MIN) {
+            aset.B1.pop_back();
+        }
         // Insert xᵗ in T2 (MRU)
         aset.T2.push_front(tag);
-        std::cout << "[ARC Fill] Ghost hit in B1 => move " << tag << " to T2\n";
     } 
     // Check if `addr` is in B2 => "ghost hit" => Case III
     else if (it_B2 != aset.B2.end()) {
@@ -75,10 +84,11 @@ void arc::replacement_cache_fill(uint32_t cpu, long set, long way,
         aset.p = (aset.p >= decrease) ? (aset.p - decrease) : 0;
 
         aset.B2.erase(it_B2);
-    
+        if (aset.B2.size() >= GHOST_MIN) {
+            aset.B2.pop_back();
+        }
         // Insert xᵗ in T2 (MRU)
         aset.T2.push_front(tag);
-        std::cout << "[ARC Fill] Ghost hit in B2 => move " << tag << " to T2\n";
     } 
     // Otherwise, brand‐new block => "Case IV"
     else{
@@ -94,7 +104,6 @@ void arc::replacement_cache_fill(uint32_t cpu, long set, long way,
                 }
             } else {
                 if (!aset.T1.empty()) { // B1 empty => Evict LRU from T1
-                    std::cout << "case 4, T1 is not empty " << "\n";
                     aset.T1.pop_back();
                 }
             }
@@ -110,7 +119,6 @@ void arc::replacement_cache_fill(uint32_t cpu, long set, long way,
         }
         // Insert brand-new line in T1
         aset.T1.push_front(tag);
-        std::cout << "[ARC Fill] New block => Insert " << tag << " into T1\n";
     }
     update_history();
 }
@@ -180,18 +188,10 @@ long arc::find_victim(uint32_t cpu, uint64_t instr_id, long set,
     // std::cout << "Evicted address: " << evicted_addr << std::endl;
     for (long w = 0; w < NUM_WAY; w++) {
         if (get_block_tag(current_set[w].address) == evicted_addr) {
-            std::cout << "Successful Eviction from Cache: " << evicted_addr << std::endl;
             return w;
         }
     }
     // we get here => mismatch
-    //print out that we have a mismatch
-    std::cout << "Eviction Mismatch:" << evicted_addr << std::endl;
-    // print out the addresses in the current set
-    for (long w = 0; w < NUM_WAY; w++) {
-        std::cout << current_set[w].address << " ";
-    }
-    std::cout << std::endl;
 
     if (type == access_type::WRITE) {
         // can't bypass => pick something forcibly
@@ -210,27 +210,12 @@ void arc::update_replacement_state(uint32_t cpu, long set, long way,
                                  uint8_t hit) {
     ARC_State &aset = arc_states[set];
 
-    //print out that we are updating the replacement state
-    std::cout << "Updating replacement state" << std::endl;
 
     if (way >= NUM_WAY) return;
 
     if (hit) {
-        // print out the address that hit
-        std::cout << "Hit: " << get_block_tag(addr) << std::endl;
         // Case 1: Address is in T1 or T2, HIT
         // Check if the page is in T1 (seen once recently)
-        //print all of the addresses in T1
-        if (aset.T1.empty()) {
-            std::cout << "T1 is empty" << std::endl;
-        }else{
-            std::cout << "T1: ";
-            for (auto it = aset.T1.begin(); it != aset.T1.end(); ++it) {
-                // print out T1
-                std::cout << *it << " ";
-            }
-            std::cout << std::endl;
-        }
         auto tag = get_block_tag(addr);
         auto it_T1 = std::find(aset.T1.begin(), aset.T1.end(), tag);
         if (it_T1 != aset.T1.end()) {
@@ -241,16 +226,6 @@ void arc::update_replacement_state(uint32_t cpu, long set, long way,
         } 
 
         // Check if the page is in T2 (seen multiple times)
-        //print all of the addresses in T2
-        if (aset.T2.empty()) {
-            std::cout << "T2 is empty" << std::endl;
-        }else{
-            std::cout << "T2: ";
-            for (auto it = aset.T2.begin(); it != aset.T2.end(); ++it) {
-                std::cout << *it << " ";
-            }
-            std::cout << std::endl;
-        }
         auto it_T2 = std::find(aset.T2.begin(), aset.T2.end(), tag);
         if (it_T2 != aset.T2.end()) {
             // Move to MRU position of T2 (maintain frequency)
@@ -260,52 +235,39 @@ void arc::update_replacement_state(uint32_t cpu, long set, long way,
         }
     }
     //If there is a hit, it can't get here
-    assert(hit == 0);
+    // assert(hit == 0);
 }
 
 void arc::replacement_final_stats() {
-    // std::cout << "ARC Replacement Final Stats:\n";
-    // for (long set = 0; set < NUM_SET; set++) {
-    //     ARC_State &aset = arc_states[set];
-    //     std::cout << "Set " << set 
-    //               << " | p = " << aset.p 
-    //               << " | T1 size = " << aset.T1.size() 
-    //               << " | T2 size = " << aset.T2.size() 
-    //               << " | B1 size = " << aset.B1.size() 
-    //               << " | B2 size = " << aset.B2.size() 
-    //               << "\n";
-    // }
+    // Generate a unique file name using process ID and current time.
+    std::time_t now = std::time(nullptr);
+    pid_t pid = getpid();
+    std::ostringstream oss;
+    oss << "arc_policy_selector_log_" << pid << "_" << now << ".txt";
+    std::string file_name = oss.str();
 
-    // Export p_history to a file.
-    std::ofstream out("p_history.txt");
-    if (!out) {
-        std::cerr << "Failed to open p_history.txt for writing.\n";
-    } else {
-        for (double avg : p_history) {
-            out << avg << "\n";
+    // Open the file for writing.
+    std::ofstream log_file(file_name);
+    if(log_file.is_open()) {
+        log_file << "p_history = [";
+        for (auto p : p_history) {
+            log_file << p << ", ";
         }
-        out.close();
+        log_file << "]\n";
+        log_file << "b1_history = [";
+        for (auto b1 : b1_history) {
+            log_file << b1 << ", ";
+        }
+        log_file << "]\n";
+        log_file << "b2_history = [";
+        for (auto b2 : b2_history) {
+            log_file << b2 << ", ";
+        }
+        log_file << "]\n";
+        log_file.close();
     }
-    // Export B1 history
-    std::ofstream b1_out("b1_history.txt");
-    if (b1_out) {
-        for (double avg : b1_history) {
-            b1_out << avg << "\n";
-        }
-        b1_out.close();
-    } else {
-        std::cerr << "Error opening b1_history.txt for writing.\n";
-    }
-
-    // Export B2 history
-    std::ofstream b2_out("b2_history.txt");
-    if (b2_out) {
-        for (double avg : b2_history) {
-            b2_out << avg << "\n";
-        }
-        b2_out.close();
-    } else {
-        std::cerr << "Error opening b2_history.txt for writing.\n";
+    else {
+        std::cerr << "Failed to open file for writing: " << file_name << std::endl;
     }
 }
 

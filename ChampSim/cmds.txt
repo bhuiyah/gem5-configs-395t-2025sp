@@ -1,0 +1,34 @@
+arc:
+bin: champsim_skylake_arc4l2c
+
+bfs: 3643685
+stdbuf --output=L bin/champsim_skylake_arc4l2c --warmup-instructions 25000000 --simulation-instructions 100000000 --json spec_runs_arc/sanity_spec_bfs_arc.json /scratch/cluster/speedway/cs395t/hw1/part2/traces/bfs.trace.gz | tee spec_runs_arc/sanity_spec_bfs_arc.txt
+
+astar: 3662590
+stdbuf --output=L bin/champsim_skylake_arc4l2c --warmup-instructions 25000000 --simulation-instructions 100000000 --json spec_runs_arc/sanity_spec_astar_arc.json /scratch/cluster/speedway/cs395t/hw1/part2/traces/astar_313B.trace.gz | tee spec_runs_arc/sanity_spec_astar_arc.txt
+
+cc: 3662763
+stdbuf --output=L bin/champsim_skylake_arc4l2c --warmup-instructions 25000000 --simulation-instructions 100000000 --json spec_runs_arc/sanity_spec_cc_arc.json /scratch/cluster/speedway/cs395t/hw1/part2/traces/cc.trace.gz | tee spec_runs_arc/sanity_spec_cc_arc.txt
+
+mcf: 3663015
+stdbuf --output=L bin/champsim_skylake_arc4l2c --warmup-instructions 25000000 --simulation-instructions 100000000 --json spec_runs_arc/sanity_spec_mcf_arc.json /scratch/cluster/speedway/cs395t/hw1/part2/traces/mcf_46B.trace.gz | tee spec_runs_arc/sanity_spec_mcf_arc.txt
+
+omnetpp: 3678116
+stdbuf --output=L bin/champsim_skylake_arc4l2c --warmup-instructions 25000000 --simulation-instructions 100000000 --json spec_runs_arc/sanity_spec_omnetpp_arc.json /scratch/cluster/speedway/cs395t/hw1/part2/traces/omnetpp_340B.trace.gz | tee spec_runs_arc/sanity_spec_omnetpp_arc.txt
+
+soplex: 3687384
+stdbuf --output=L bin/champsim_skylake_arc4l2c --warmup-instructions 25000000 --simulation-instructions 100000000 --json spec_runs_arc/sanity_spec_soplex_arc.json /scratch/cluster/speedway/cs395t/hw1/part2/traces/soplex_66B.trace.gz | tee spec_runs_arc/sanity_spec_soplex_arc.txt
+
+sphinx: 3688746
+stdbuf --output=L bin/champsim_skylake_arc4l2c --warmup-instructions 25000000 --simulation-instructions 100000000 --json spec_runs_arc/sanity_spec_sphinx_arc.json /scratch/cluster/speedway/cs395t/hw1/part2/traces/sphinx3_2520B.trace.gz | tee spec_runs_arc/sanity_spec_sphinx_arc.txt
+
+xalanc: 3689127
+stdbuf --output=L bin/champsim_skylake_arc4l2c --warmup-instructions 25000000 --simulation-instructions 100000000 --json spec_runs_arc/sanity_spec_xalanc_arc.json /scratch/cluster/speedway/cs395t/hw1/part2/traces/xalancbmk_99B.trace.gz | tee spec_runs_arc/sanity_spec_xalanc_arc.txt
+
+
+
+LRU:
+bin: champsim_lru
+
+OG arc:
+bin: champsim_skylake

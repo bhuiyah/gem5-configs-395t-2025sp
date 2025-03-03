@@ -34,6 +34,10 @@ private:
     std::vector<double> b1_history;
     std::vector<double> b2_history;
 
+    // You can add these as constants or members in arc.cc
+    const size_t GHOST_MAX = 2 * NUM_WAY;    // maximum ghost list size
+    const size_t GHOST_MIN = NUM_WAY / 2;      // minimum ghost list size (if desired)
+
 public:
     explicit arc(CACHE* cache);
     arc(CACHE* cache, long sets, long ways);
